@@ -24,7 +24,7 @@ router.get('/users', asyncHandler(async (req, res) => {
 // Create a new user, set Location header to "/" +  201 status
 router.post('/users', asyncHandler(async (req, res) => {
     await User.create(req.body);
-    res.status(201).json({ "message": "User created successfully!" }).redirect('/');
+    res.location('/').status(201).end();
 }));
 
 // Return all courses including User associated + 200 status
@@ -43,8 +43,35 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 + 201 status + no content
 */
 router.post('/courses', asyncHandler(async (req, res) => {
-    const newCourse = await Course.create(req.body);
-    res.status(201).render({newCourse, "message" : "Course created successfully!" });
+    let course;
+    if (req.body.title && req.body.description && req.body.userId) {
+        course = await Course.create({
+            title: req.body.title,
+            description: req.body.description,
+            userId: req.body.userId
+        });
+    }
+    res.location(`localhost:5000/api/courses/${course.id}`).status(201).end();
+}));
+
+// Update the corresponding course + 204 status + no content
+router.put('/courses/:id', asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id);
+    if (course) {
+        await course.update({
+            title: req.body.title,
+            description: req.body.description,
+            userId: req.body.userId
+        })
+    }
+    res.status(204).end();
+}));
+
+// Delete the corresponding course + 204 status + no content
+router.delete('/courses/:id', asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id);
+    await course.destroy();
+    res.status(204).end();
 }));
 
 module.exports = router;
