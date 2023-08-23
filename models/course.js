@@ -25,7 +25,3 @@ module.exports = (sequelize) => {
 
     return Course;
 }
-
-/* On number 4 - Define the Models > userId (created in the model associations with 
-    the foreignKey property, and equals the id from the Users table)
-    */
