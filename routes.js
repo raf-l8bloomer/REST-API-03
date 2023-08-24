@@ -76,3 +76,5 @@ router.delete('/courses/:id', asyncHandler(async (req, res) => {
 
 module.exports = router;
 
+//*You are on number 9 - Add Validations!! So proud of you, you're getting routes*//
+
