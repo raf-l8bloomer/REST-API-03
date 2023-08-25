@@ -9,8 +9,7 @@ const { authenticateUser } = require('./middleware/auth-user');
 // Return all properties & values for currently authenticated User + 200 status 
 router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
     const user = req.currentUser;
-    const users = await User.findAll();
-    res.status(200).json(users).json({ name: user.name, username: user.username});
+    res.status(200).json({ name: user.firstName, username: user.emailAddress });
 }));
 
 router.post('/users', asyncHandler(async (req, res) => {
@@ -24,13 +23,23 @@ router.post('/users', asyncHandler(async (req, res) => {
 
 // Return all courses including User associated + 200 status
 router.get('/courses', asyncHandler(async (req, res) => {
-    const courses = await Course.findAll();
+    const courses = await Course.findAll({
+        include: [{
+            model: User,
+            as: 'courseOwner'
+        }]
+    });
     res.json(courses).status(200);
 }));
 
 // Return corresponding course including the User + 200 status
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findByPk(req.params.id, {
+        include: [{
+            model: User,
+            as: 'courseOwner'
+        }]
+    });
     res.json(course).status(200);
 }));
 
@@ -38,23 +47,19 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 + 201 status + no content
 */
 router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
-
     try {
         let course;
-        if (req.body.title && req.body.description && req.body.userId) {
-            course = await Course.create({
-                title: req.body.title,
-                description: req.body.description,
-                userId: req.body.userId
-            });
-            res.location(`localhost:5000/api/courses/${course.id}`).status(201).end();
-        } else {
-            res.status(400).json({ message: 'Incomplete course data for creation' });
-        }
-
+        course = await Course.create({
+            title: req.body.title,
+            description: req.body.description,
+            userId: req.body.userId
+        });
+        res.location(`courses/${course.id}`).status(201).end();
     } catch (error) {
         error400Handler(error, res);
     }
+
+
 
 }));
 
@@ -62,19 +67,17 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     try {
         const course = await Course.findByPk(req.params.id);
-            if (course && req.body.title && req.body.description) {
-                await course.update({
-                    title: req.body.title,
-                    description: req.body.description,
-                    userId: req.body.userId
-                })
-            res.status(204).end();
-        } else {
-            res.status(400).json({ message: 'Incomplete course data for updating' });
-        }
+        await course.update({
+            title: req.body.title,
+            description: req.body.description,
+            userId: req.body.userId
+        })
+        res.status(204).end();
     } catch (error) {
         error400Handler(error, res);
     }
+
+
 
 }));
 
